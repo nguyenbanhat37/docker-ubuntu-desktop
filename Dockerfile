@@ -18,7 +18,7 @@ RUN apt update -y && apt install --no-install-recommends -y \
     pulseaudio pulseaudio-utils pavucontrol \
     # Essential tools
     sudo xterm init systemd vim nano net-tools curl wget git \
-    tzdata locales ca-certificates openssl \
+    tzdata locales ca-certificates openssl gnupg dirmngr \
     # Development tools
     build-essential htop tmux less \
     # UI enhancements
