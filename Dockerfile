@@ -61,7 +61,13 @@ if [ ! -f /root/.vnc/self.pem ]; then
 fi
 
 # Start VNC server with improved settings
+# Keep display fixed at :1 so websockify target remains stable (5901).
+vncserver -kill :1 >/dev/null 2>&1 || true
+rm -f /tmp/.X1-lock
+rm -f /tmp/.X11-unix/X1
+
 vncserver \
+    :1 \
     -localhost no \
     -SecurityTypes None \
     -geometry 1280x720 \
