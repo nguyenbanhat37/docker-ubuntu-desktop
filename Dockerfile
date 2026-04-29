@@ -16,45 +16,40 @@
 # EXPOSE 6080
 # CMD bash -c "vncserver -localhost no -SecurityTypes None -geometry 1024x768 --I-KNOW-THIS-IS-INSECURE && openssl req -new -subj "/C=JP" -x509 -days 365 -nodes -out self.pem -keyout self.pem && websockify -D --web=/usr/share/novnc/ --cert=self.pem 6080 localhost:5901 && tail -f /dev/null"
 
+
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Cài tối thiểu để chạy GUI nhẹ
-
 RUN apt update && apt install -y 
-xfce4 xfce4-terminal 
+xfce4 
+xfce4-terminal 
 tigervnc-standalone-server 
-novnc websockify 
-dbus-x11 x11-xserver-utils 
+novnc 
+websockify 
+dbus-x11 
+x11-xserver-utils 
+autocutsel 
 firefox 
-curl 
+xclip 
 && apt clean
-
-# Setup VNC
 
 RUN mkdir -p /root/.vnc
 
-# XFCE startup
-
-RUN echo "#!/bin/bash\nxrdb $HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup && 
+RUN echo "#!/bin/bash\n
+xrdb $HOME/.Xresources\n
+autocutsel -fork\n
+autocutsel -selection PRIMARY -fork\n
+startxfce4 &" > /root/.vnc/xstartup && 
 chmod +x /root/.vnc/xstartup
-
-# Tạo password VNC (123456)
 
 RUN echo "123456" | vncpasswd -f > /root/.vnc/passwd && 
 chmod 600 /root/.vnc/passwd
 
-# Fix Xauthority
-
 RUN touch /root/.Xauthority
-
-# Railway dùng PORT env
 
 ENV PORT=6080
 EXPOSE 6080
-
-# Start VNC + noVNC
 
 CMD bash -c "
 vncserver :1 -geometry 1024x768 -depth 24 && 
