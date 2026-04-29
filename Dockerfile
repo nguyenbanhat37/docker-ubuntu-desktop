@@ -2,18 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && apt install -y 
-xfce4 
-xfce4-terminal 
-tigervnc-standalone-server 
-novnc 
-websockify 
-dbus-x11 
-x11-xserver-utils 
-autocutsel 
-firefox 
-xclip 
-&& apt clean
+RUN apt update && apt install -y xfce4 xfce4-terminal tigervnc-standalone-server novnc websockify dbus-x11 x11-xserver-utils autocutsel firefox xclip && apt clean
 
 RUN mkdir -p /root/.vnc
 
