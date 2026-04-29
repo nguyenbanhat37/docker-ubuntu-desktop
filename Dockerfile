@@ -1,43 +1,59 @@
-FROM ubuntu:22.04
+FROM --platform=linux/amd64 ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Cài đặt các gói cần thiết
-RUN apt-get update && apt-get install -y \
-    xfce4 \
-    xfce4-terminal \
+RUN apt-get update -y && apt-get install --no-install-recommends -y \
+    xfce4 xfce4-goodies xfce4-terminal \
     tigervnc-standalone-server \
-    novnc \
-    websockify \
-    dbus-x11 \
-    x11-xserver-utils \
-    autocutsel \
-    firefox \
-    xclip \
-    && apt-get clean \
+    novnc websockify \
+    dbus-x11 x11-utils x11-xserver-utils x11-apps \
+    sudo xterm vim net-tools curl wget git tzdata \
+    software-properties-common openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Cài Firefox từ PPA mozilla
+RUN add-apt-repository ppa:mozillateam/ppa -y && \
+    printf 'Package: *\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001\n' \
+        > /etc/apt/preferences.d/mozilla-firefox && \
+    echo 'Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:jammy";' \
+        > /etc/apt/apt.conf.d/51unattended-upgrades-firefox && \
+    apt-get update -y && apt-get install -y firefox && \
+    rm -rf /var/lib/apt/lists/*
+
+# Cài icon theme
+RUN apt-get update -y && apt-get install -y xubuntu-icon-theme \
     && rm -rf /var/lib/apt/lists/*
 
 # Tạo thư mục VNC
-RUN mkdir -p /root/.vnc
+RUN mkdir -p /root/.vnc && touch /root/.Xauthority
 
-# Tạo xstartup script đúng cú pháp (lỗi gốc: viết sai newline)
+# FIX CHÍNH: startxfce4 chạy foreground, KHÔNG dùng & để tránh exit sớm
 RUN printf '#!/bin/bash\n\
-xrdb $HOME/.Xresources\n\
-autocutsel -fork\n\
-autocutsel -selection PRIMARY -fork\n\
-startxfce4 &\n' > /root/.vnc/xstartup && chmod +x /root/.vnc/xstartup
+export DISPLAY=:1\n\
+unset SESSION_MANAGER\n\
+unset DBUS_SESSION_BUS_ADDRESS\n\
+[ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources\n\
+xsetroot -solid grey\n\
+exec /usr/bin/startxfce4\n' > /root/.vnc/xstartup && \
+    chmod +x /root/.vnc/xstartup
 
-# Đặt mật khẩu VNC
-RUN echo "123456" | vncpasswd -f > /root/.vnc/passwd && chmod 600 /root/.vnc/passwd
+# Tạo SSL cert cho noVNC
+RUN openssl req -new -subj "/C=VN/CN=novnc" -x509 -days 365 \
+    -nodes -out /root/self.pem -keyout /root/self.pem
 
-# Tạo file Xauthority
-RUN touch /root/.Xauthority
-
-# Lỗi gốc: ENV và EXPOSE không thể gộp chung một dòng
-ENV PORT=6080
 EXPOSE 6080
 
-# Script khởi động với xử lý lỗi tốt hơn
+# Railway inject biến $PORT tự động; fallback 6080 khi chạy local
 CMD bash -c "\
-    vncserver :1 -geometry 1280x800 -depth 24 -localhost no && \
-    websockify --web=/usr/share/novnc/ --wrap-mode=ignore $PORT localhost:5901"
+    vncserver :1 \
+        -localhost no \
+        -SecurityTypes None \
+        -geometry 1280x800 \
+        -depth 24 \
+        --I-KNOW-THIS-IS-INSECURE && \
+    exec websockify \
+        --web=/usr/share/novnc/ \
+        --cert=/root/self.pem \
+        --wrap-mode=ignore \
+        ${PORT:-6080} localhost:5901"
