@@ -129,10 +129,6 @@ RUN touch /root/.Xauthority
 RUN openssl req -new -subj "/C=VN/CN=novnc" -x509 -days 365 -nodes \
     -out /root/self.pem -keyout /root/self.pem
 
-# ─── bore (SSH tunnel miễn phí) ───────────────────────────
-RUN wget -qO /usr/local/bin/bore https://github.com/ekzhang/bore/releases/download/v0.4.0/bore-linux-amd64 \
-    && chmod +x /usr/local/bin/bore
-
 EXPOSE 6080 22
 
 # ─── START ────────────────────────────────────────────────
