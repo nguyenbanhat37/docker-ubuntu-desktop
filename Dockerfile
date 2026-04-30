@@ -11,8 +11,8 @@ RUN apt-get update -y && apt-get install --no-install-recommends -y \
     sudo xterm vim net-tools curl wget git tzdata \
     openssl ca-certificates \
     libgtk-3-0 libdbus-glib-1-2 \
-    # SSH
     openssh-server \
+    bzip2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Cài Firefox từ Mozilla trực tiếp (không cần PPA)
