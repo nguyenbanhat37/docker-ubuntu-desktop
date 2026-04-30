@@ -10,14 +10,23 @@ Ubuntu Desktop Web Browser Accessible Docker Image with Enhanced User Experience
 🖥️ **Better display** - Higher DPI (96), improved resolution (1280x720)  
 ⌨️ **Clipboard manager** - XFCE4 Clipman pre-installed  
 🚀 **Development tools** - htop, tmux, build-essential included
+## 🌐 Cách truy cập (QUAN TRỌNG)
+
+Sau khi deploy Railway:
+
+👉 dùng URL:
+
+https://your-app.up.railway.app/?resize=scale
+
+✔ auto fit màn hình
+✔ không bị scroll
+✔ nhìn như desktop thật
 
 ## ScreenShot
 ![screenshot](screenshot.png)
 
 ## Usage
-```bash
 $ docker run -it --platform=linux/amd64 -p 6080:6080 akarita/docker-ubuntu-desktop
-```
 
 ### With Audio Support
 ```bash
