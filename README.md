@@ -22,6 +22,16 @@ https://your-app.up.railway.app/?resize=scale
 ✔ không bị scroll
 ✔ nhìn như desktop thật
 
+## 🔐 SSH (qua bore)
+
+Log sẽ hiện kiểu:
+
+Forwarding: bore.pub:xxxxx -> localhost:22
+
+Connect:
+
+ssh root@bore.pub -p xxxxx
+
 ## ScreenShot
 ![screenshot](screenshot.png)
 
