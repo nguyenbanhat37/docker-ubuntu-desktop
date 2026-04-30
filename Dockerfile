@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y \
     xfce4 xfce4-goodies \
     tigervnc-standalone-server \
     novnc websockify \
-    dbus-x11 x11-xserver-utils \
+    dbus dbus-x11 \
+    x11-xserver-utils \
     xterm wget curl \
     ca-certificates \
     firefox-esr \
@@ -20,20 +21,24 @@ RUN apt-get update && apt-get install -y \
 # ─── VNC config ───────────────────────────────────────────
 RUN mkdir -p /root/.vnc
 
+# ✔ FIX: xstartup chuẩn (KHÔNG crash XFCE)
 RUN printf '#!/bin/sh\n\
 unset SESSION_MANAGER\n\
 unset DBUS_SESSION_BUS_ADDRESS\n\
 \n\
-xrdb $HOME/.Xresources\n\
+# Fix runtime cho XFCE\n\
+export XDG_RUNTIME_DIR=/tmp/runtime-root\n\
+mkdir -p $XDG_RUNTIME_DIR\n\
+chmod 700 $XDG_RUNTIME_DIR\n\
 \n\
-# start XFCE (full desktop giống Windows)\n\
-startxfce4 &\n\
+# tránh lỗi xrdb\n\
+[ -f $HOME/.Xresources ] && xrdb $HOME/.Xresources\n\
 \n\
-# fallback nếu XFCE lỗi\n\
-xterm &\n\
-\n\
+# start XFCE đúng cách (GIỮ SESSION)\n\
+exec dbus-launch --exit-with-session startxfce4\n\
 ' > /root/.vnc/xstartup && chmod +x /root/.vnc/xstartup
 
+# password VNC
 RUN echo "123456" | vncpasswd -f > /root/.vnc/passwd && chmod 600 /root/.vnc/passwd
 
 RUN touch /root/.Xauthority
