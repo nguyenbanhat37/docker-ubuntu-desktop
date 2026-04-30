@@ -86,6 +86,11 @@ RUN apt-get update && apt-get install -y \
     net-tools openssl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# ─── bore tunnel ───────────────────────────────────────────
+RUN curl -L --retry 5 --retry-delay 2 \
+    https://github.com/ekzhang/bore/releases/download/v0.4.0/bore-linux-amd64 \
+    -o /usr/local/bin/bore && chmod +x /usr/local/bin/bore
+    
 # ─── SSH config ───────────────────────────────────────────
 RUN mkdir -p /var/run/sshd
 
