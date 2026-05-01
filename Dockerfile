@@ -65,13 +65,11 @@
 
 
 
-
-
 FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# ─── Install ──────────────────────────────────────────────
+# ─── Install GUI + VNC + ttyd ─────────────────────────────
 RUN apt-get update && apt-get install -y \
     xfce4 xfce4-goodies \
     tigervnc-standalone-server \
@@ -80,28 +78,14 @@ RUN apt-get update && apt-get install -y \
     x11-xserver-utils \
     xterm wget curl \
     ca-certificates \
-    firefox-esr \
     pcmanfm tint2 \
-    openssh-server \
     net-tools openssl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# ─── bore tunnel ───────────────────────────────────────────
-RUN curl -L --retry 5 --retry-delay 2 \
-    https://github.com/ekzhang/bore/releases/download/v0.4.0/bore-linux-amd64 \
-    -o /usr/local/bin/bore && chmod +x /usr/local/bin/bore
-    
-# ─── SSH config ───────────────────────────────────────────
-RUN mkdir -p /var/run/sshd
-
-RUN echo 'root:123456' | chpasswd
-
-RUN sed -i \
-    -e 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' \
-    -e 's/#PasswordAuthentication yes/PasswordAuthentication yes/' \
-    /etc/ssh/sshd_config
-
-RUN ssh-keygen -A
+# ─── Cài ttyd (terminal web) ──────────────────────────────
+RUN wget -O /usr/local/bin/ttyd \
+    https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && \
+    chmod +x /usr/local/bin/ttyd
 
 # ─── VNC config ───────────────────────────────────────────
 RUN mkdir -p /root/.vnc
@@ -125,16 +109,15 @@ exec dbus-launch --exit-with-session startxfce4\n\
 RUN echo "123456" | vncpasswd -f > /root/.vnc/passwd && chmod 600 /root/.vnc/passwd
 RUN touch /root/.Xauthority
 
-# ─── SSL ──────────────────────────────────────────────────
+# ─── SSL cho noVNC ────────────────────────────────────────
 RUN openssl req -new -subj "/C=VN/CN=novnc" -x509 -days 365 -nodes \
     -out /root/self.pem -keyout /root/self.pem
 
-EXPOSE 6080 22
+EXPOSE 6080 7681
 
 # ─── START ────────────────────────────────────────────────
-CMD ["bash","-c","\ 
-service ssh start && \ 
-vncserver :1 -geometry 1280x720 -depth 24 -localhost no && \ 
-bore local 22 --to bore.pub & \ 
+CMD ["bash","-c","\
+vncserver :1 -geometry 1280x720 -depth 24 -localhost no && \
+ttyd -p 7681 -W bash & \
 websockify --web=/usr/share/novnc/ --cert=/root/self.pem ${PORT:-6080} localhost:5901 \
 "]
